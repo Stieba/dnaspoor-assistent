@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNASpoor Assistent</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F7F3EE; --sand: #E8DDD0; --warm-brown: #8B6F5E;
+    --deep-brown: #3D2B1F; --terracotta: #C4715A; --sage: #7A9E7E;
+    --gold: #C9A84C; --text: #2C1810; --muted: #7A6358;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; overflow:hidden; font-family:'DM Sans',sans-serif; font-weight:300; background:var(--cream); color:var(--text); }
+
+  /* TOP BAR */
+  .topbar { height:54px; background:var(--deep-brown); display:flex; align-items:center; justify-content:space-between; padding:0 1.2rem; border-bottom:1px solid rgba(255,255,255,0.07); flex-shrink:0; }
+  .logo { font-family:'Fraunces',serif; font-size:1.15rem; color:var(--cream); font-weight:300; letter-spacing:-0.02em; }
+  .logo em { color:var(--terracotta); font-style:italic; }
+  .status { display:flex; align-items:center; gap:0.5rem; font-size:0.7rem; color:rgba(247,243,238,0.45); text-transform:uppercase; letter-spacing:0.08em; }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--sage); animation:pulse 2.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .new-btn { background:rgba(247,243,238,0.08); border:1px solid rgba(247,243,238,0.12); color:rgba(247,243,238,0.65); font-size:0.7rem; padding:0.3rem 0.8rem; cursor:pointer; font-family:'DM Sans',sans-serif; text-transform:uppercase; letter-spacing:0.05em; transition:all 0.2s; }
+  .new-btn:hover { background:rgba(196,113,90,0.3); color:var(--cream); }
+
+  /* LAYOUT */
+  .app { display:flex; flex:1; overflow:hidden; height:calc(100vh - 54px); }
+
+  /* SIDEBAR */
+  .sidebar { width:255px; background:#2A1E15; display:flex; flex-direction:column; flex-shrink:0; border-right:1px solid rgba(255,255,255,0.06); overflow-y:auto; }
+  .sidebar-label { padding:1rem 1rem 0.4rem; font-size:0.6rem; letter-spacing:0.12em; text-transform:uppercase; color:rgba(247,243,238,0.3); font-weight:500; }
+  .step-list { list-style:none; padding:0 0.5rem 0.8rem; }
+  .step-list li { display:flex; align-items:flex-start; gap:0.6rem; padding:0.55rem 0.7rem; cursor:pointer; color:rgba(247,243,238,0.5); border-left:2px solid transparent; font-size:0.78rem; line-height:1.4; transition:all 0.2s; }
+  .step-list li:hover { background:rgba(247,243,238,0.05); color:rgba(247,243,238,0.8); }
+  .step-list li.active { color:var(--terracotta); border-left-color:var(--terracotta); background:rgba(196,113,90,0.12); }
+  .step-n { font-family:'Fraunces',serif; font-size:0.9rem; width:18px; text-align:center; flex-shrink:0; opacity:0.7; }
+  .divider { height:1px; background:rgba(255,255,255,0.06); margin:0.2rem 1rem; }
+  .quick-list { padding:0 0.5rem 0.8rem; display:flex; flex-direction:column; gap:0.3rem; }
+  .quick-btn { background:rgba(247,243,238,0.04); border:1px solid rgba(247,243,238,0.08); color:rgba(247,243,238,0.6); font-size:0.74rem; padding:0.5rem 0.7rem; cursor:pointer; font-family:'DM Sans',sans-serif; text-align:left; display:flex; align-items:center; gap:0.5rem; width:100%; transition:all 0.2s; }
+  .quick-btn:hover { background:rgba(196,113,90,0.15); color:var(--cream); }
+  .quick-icon { width:18px; text-align:center; }
+  .sidebar-footer { margin-top:auto; padding:1rem; font-size:0.7rem; color:rgba(247,243,238,0.35); line-height:1.7; border-top:1px solid rgba(255,255,255,0.06); }
+  .sidebar-footer a { color:var(--terracotta); text-decoration:none; font-weight:500; }
+
+  /* CHAT */
+  .chat { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .banner { padding:0.6rem 1.5rem; background:var(--sand); border-bottom:1px solid rgba(139,111,94,0.2); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .banner-label { font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--terracotta); font-weight:500; }
+  .banner-title { font-family:'Fraunces',serif; font-size:0.95rem; color:var(--deep-brown); }
+  .banner-badge { background:var(--terracotta); color:var(--cream); font-size:0.62rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.2rem 0.6rem; font-weight:500; }
+
+  .messages { flex:1; overflow-y:auto; padding:1.5rem; display:flex; flex-direction:column; gap:1.2rem; scroll-behavior:smooth; }
+  .messages::-webkit-scrollbar { width:4px; }
+  .messages::-webkit-scrollbar-thumb { background:var(--sand); }
+
+  /* WELCOME */
+  .welcome { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; text-align:center; gap:1.5rem; padding:2rem; min-height:300px; }
+  .welcome-icon { width:64px; height:64px; border-radius:50%; background:var(--deep-brown); display:flex; align-items:center; justify-content:center; font-size:1.6rem; }
+  .welcome h2 { font-family:'Fraunces',serif; font-size:1.7rem; font-weight:300; color:var(--deep-brown); letter-spacing:-0.02em; line-height:1.2; }
+  .welcome h2 em { font-style:italic; color:var(--terracotta); }
+  .welcome p { color:var(--muted); font-size:0.9rem; line-height:1.8; max-width:380px; }
+  .chips { display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center; max-width:480px; }
+  .chip { background:var(--sand); border:1px solid rgba(139,111,94,0.25); color:var(--warm-brown); font-size:0.8rem; padding:0.4rem 0.85rem; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+  .chip:hover { background:var(--deep-brown); color:var(--cream); }
+
+  /* MESSAGES */
+  .msg { display:flex; gap:0.8rem; animation:msgIn 0.3s ease; }
+  @keyframes msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .msg.user { flex-direction:row-reverse; }
+  .avatar { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:0.9rem; font-family:'Fraunces',serif; }
+  .msg.assistant .avatar { background:var(--deep-brown); color:var(--gold); }
+  .msg.user .avatar { background:var(--terracotta); color:var(--cream); }
+  .bubble { max-width:72%; padding:0.85rem 1.1rem; font-size:0.88rem; line-height:1.75; }
+  .msg.assistant .bubble { background:white; border:1px solid rgba(139,111,94,0.15); color:var(--text); border-radius:0 8px 8px 8px; }
+  .msg.user .bubble { background:var(--deep-brown); color:var(--cream); border-radius:8px 0 8px 8px; }
+  .bubble p { margin-bottom:0.4rem; }
+  .bubble ul,.bubble ol { margin:0.5rem 0 0.5rem 1.2rem; display:flex; flex-direction:column; gap:0.2rem; }
+  .bubble strong { font-weight:500; color:var(--terracotta); }
+  .msg.user .bubble strong { color:var(--gold); }
+  .suggestions { display:flex; flex-wrap:wrap; gap:0.4rem; margin-top:0.8rem; }
+  .sug-chip { background:var(--sand); border:1px solid rgba(139,111,94,0.25); color:var(--warm-brown); font-size:0.75rem; padding:0.35rem 0.75rem; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+  .sug-chip:hover { background:var(--deep-brown); color:var(--cream); }
+
+  /* TYPING */
+  .typing { display:flex; gap:0.8rem; align-items:flex-start; }
+  .typing-bubble { background:white; border:1px solid rgba(139,111,94,0.15); padding:1rem 1.1rem; border-radius:0 8px 8px 8px; display:flex; gap:5px; align-items:center; }
+  .typing-dot { width:7px; height:7px; border-radius:50%; background:var(--warm-brown); animation:bounce 1.4s ease-in-out infinite; }
+  .typing-dot:nth-child(2){animation-delay:0.2s} .typing-dot:nth-child(3){animation-delay:0.4s}
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:0.4} 40%{transform:translateY(-6px);opacity:1} }
+
+  /* INPUT */
+  .input-area { padding:1rem 1.5rem 1.2rem; background:var(--cream); border-top:1px solid rgba(139,111,94,0.15); flex-shrink:0; }
+  .input-row { display:flex; gap:0.6rem; align-items:flex-end; }
+  textarea { flex:1; background:white; border:1.5px solid rgba(139,111,94,0.25); color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:300; padding:0.75rem 1rem; resize:none; line-height:1.6; min-height:46px; max-height:140px; outline:none; transition:border-color 0.2s; border-radius:0; }
+  textarea:focus { border-color:var(--terracotta); }
+  textarea::placeholder { color:rgba(122,99,88,0.4); }
+  .send-btn { background:var(--deep-brown); border:none; color:var(--cream); width:46px; height:46px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:all 0.2s; border-radius:0; }
+  .send-btn:hover { background:var(--terracotta); }
+  .send-btn:disabled { background:var(--sand); color:var(--warm-brown); cursor:not-allowed; }
+  .hint { font-size:0.65rem; color:var(--muted); margin-top:0.4rem; opacity:0.6; }
+
+  @media(max-width:650px) { .sidebar{display:none} .bubble{max-width:88%} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">DNA<em>Spoor</em> Assistent</div>
+  <div class="status"><div class="dot"></div>Actief</div>
+  <button class="new-btn" onclick="clearChat()">Nieuw gesprek</button>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-label">Stappenplan</div>
+    <ul class="step-list" id="stepList">
+      <li class="active" onclick="setStep(0)"><span class="step-n">1</span>DNA-test doen</li>
+      <li onclick="setStep(1)"><span class="step-n">2</span>Matches analyseren</li>
+      <li onclick="setStep(2)"><span class="step-n">3</span>Stamboombomen bouwen</li>
+      <li onclick="setStep(3)"><span class="step-n">4</span>Kandidatenlijst maken</li>
+      <li onclick="setStep(4)"><span class="step-n">5</span>Conclusie bevestigen</li>
+      <li onclick="setStep(5)"><span class="step-n">6</span>Contact opnemen</li>
+    </ul>
+    <div class="divider"></div>
+    <div class="sidebar-label">Snelle vragen</div>
+    <div class="quick-list">
+      <button class="quick-btn" onclick="ask('Wat is een centimorgan en hoe gebruik ik het?')"><span class="quick-icon">🧬</span>Wat is een centimorgan?</button>
+      <button class="quick-btn" onclick="ask('Leg de Leeds-methode stap voor stap uit')"><span class="quick-icon">🗂️</span>Leeds-methode uitleggen</button>
+      <button class="quick-btn" onclick="ask('Hoe upload ik mijn DNA naar GEDmatch?')"><span class="quick-icon">⬆️</span>DNA uploaden naar GEDmatch</button>
+      <button class="quick-btn" onclick="ask('Welk platform heeft de meeste Nederlandse profielen?')"><span class="quick-icon">🇳🇱</span>Beste platform voor NL</button>
+      <button class="quick-btn" onclick="ask('Vertel me meer over Socht en Ester de Lau')"><span class="quick-icon">🌿</span>Hulp via Socht</button>
+      <button class="quick-btn" onclick="ask('Ik heb angst voor wat ik ga vinden. Wat zijn mijn opties?')"><span class="quick-icon">💙</span>Emotionele steun</button>
+      <button class="quick-btn" onclick="ask('Hoe bereid ik het eerste contact voor met de donor?')"><span class="quick-icon">✉️</span>Eerste contact</button>
+    </div>
+    <div class="sidebar-footer">
+      <strong style="color:rgba(247,243,238,0.55)">Professionele hulp?</strong><br>
+      <a href="https://socht.nl" target="_blank">socht.nl</a> — Ester de Lau<br>
+      genetisch genealoog & donorkind<br>
+      <span style="opacity:0.6">ester@socht.nl</span>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat">
+    <div class="banner">
+      <div>
+        <div class="banner-label" id="bannerLabel">Stap 1 van 6</div>
+        <div class="banner-title" id="bannerTitle">DNA-test doen bij meerdere databanken</div>
+      </div>
+      <div class="banner-badge" id="bannerBadge">Voorbereiding</div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcome">
+        <div class="welcome-icon">🌿</div>
+        <h2>Hallo, ik ben jouw<br><em>DNA-genealogie gids</em></h2>
+        <p>Ik help je stap voor stap bij het vinden van je biologische vader. Stel me elke vraag — hoe technisch of persoonlijk ook.</p>
+        <div class="chips">
+          <div class="chip" onclick="ask('Waar begin ik? Ik heb nog geen DNA-test gedaan.')">Waar begin ik?</div>
+          <div class="chip" onclick="ask('Ik heb al een DNA-test. Wat zijn mijn volgende stappen?')">Ik heb al een test</div>
+          <div class="chip" onclick="ask('Ik heb veel matches maar weet niet hoe ik ze moet analyseren')">Veel matches, hoe nu?</div>
+          <div class="chip" onclick="ask('Hoe lang duurt dit proces gemiddeld?')">Hoe lang duurt het?</div>
+          <div class="chip" onclick="ask('Is mijn privacy beschermd als ik een DNA-test doe?')">Privacy & veiligheid</div>
+          <div class="chip" onclick="ask('Ik ben bang voor wat ik ga vinden. Is dat normaal?')">Ik ben zenuwachtig</div>
+          <div class="chip" onclick="ask('Vertel me meer over Socht en Ester de Lau')">Hulp van een expert</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-row">
+        <textarea id="input" placeholder="Stel een vraag over jouw zoektocht..." rows="1"
+          onkeydown="handleKey(event)" oninput="resize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M16 2L2 8l5 2 2 6 7-14z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="hint">Enter om te sturen · Shift+Enter voor nieuwe regel</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STEPS = [
+  {label:"Stap 1 van 6", title:"DNA-test doen bij meerdere databanken", badge:"Voorbereiding"},
+  {label:"Stap 2 van 6", title:"DNA-matches identificeren & analyseren", badge:"Analyse"},
+  {label:"Stap 3 van 6", title:"Stamboombomen bouwen van matches", badge:"Genealogie"},
+  {label:"Stap 4 van 6", title:"Kandidatenlijst maken & inperken", badge:"Inperking"},
+  {label:"Stap 5 van 6", title:"Conclusie bevestigen met aanvullend DNA", badge:"Bevestiging"},
+  {label:"Stap 6 van 6", title:"Eerste contact voorbereiden", badge:"Contact"},
+];
+const STEP_NAMES = [
+  "DNA-test doen bij meerdere databanken",
+  "DNA-matches identificeren en analyseren",
+  "Stamboombomen bouwen van matches",
+  "Een kandidatenlijst maken en inperken",
+  "De conclusie bevestigen met aanvullend DNA",
+  "Het eerste contact voorbereiden",
+];
+
+const SYSTEM = `Je bent een empathische, deskundige assistent voor donorkinderen die via DNA-genealogie hun biologische vader willen vinden. Je naam is de DNASpoor Assistent.
+
+Je expertise: genetische genealogie, DNA-matching (cM, clusters, Leeds-methode), AncestryDNA/MyHeritage/FamilyTreeDNA/GEDmatch/23andMe, archiefonderzoek (Archieven.nl, Familysearch), Nederlandse donorwetgeving (SDKB), emotionele begeleiding, eerste contact met donor.
+
+Expert-verwijzing: Ester de Lau (ester@socht.nl | socht.nl) is genetisch genealoog en zelf donorkind. Ze vond haar eigen donor in 2019 en helpt via Socht anderen met: expert review DNA-matches, workshops, samen familie zoeken. Verwijs naar haar als iemand vastloopt of professionele hulp zoekt.
+
+Toon: Warm, geduldig, concreet. Geen jargon zonder uitleg. Max 300 woorden.
+
+Voeg aan het einde where passend 2-3 vervolgvragen toe:
+[SUGGESTIES: vraag 1 | vraag 2 | vraag 3]`;
+
+let history = [];
+let currentStep = 0;
+let loading = false;
+
+function setStep(i) {
+  currentStep = i;
+  document.querySelectorAll('.step-list li').forEach((li,j) => li.classList.toggle('active', i===j));
+  document.getElementById('bannerLabel').textContent = STEPS[i].label;
+  document.getElementById('bannerTitle').textContent = STEPS[i].title;
+  document.getElementById('bannerBadge').textContent = STEPS[i].badge;
+  ask(`Ik ben nu bezig met stap ${i+1}: ${STEP_NAMES[i]}. Geef me een beknopt overzicht van wat ik in deze stap moet doen.`);
+}
+
+function resize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function hideWelcome() {
+  const w = document.getElementById('welcome');
+  if (w) w.remove();
+}
+
+function addMsg(role, text, suggestions=[]) {
+  hideWelcome();
+  const msgs = document.getElementById('messages');
+
+  // Format text
+  let html = '';
+  const lines = text.split('\n');
+  let inList = false, listType = '';
+
+  const bold = s => s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  lines.forEach(line => {
+    const bm = line.match(/^[-•]\s+(.+)/);
+    const nm = line.match(/^\d+\.\s+(.+)/);
+    if (bm) {
+      if (!inList || listType!=='ul') { if(inList)html+=`</${listType}>`; html+='<ul>'; inList=true; listType='ul'; }
+      html += `<li>${bold(bm[1])}</li>`;
+    } else if (nm) {
+      if (!inList || listType!=='ol') { if(inList)html+=`</${listType}>`; html+='<ol>'; inList=true; listType='ol'; }
+      html += `<li>${bold(nm[1])}</li>`;
+    } else {
+      if (inList) { html+=`</${listType}>`; inList=false; listType=''; }
+      if (line.trim()) html += `<p>${bold(line)}</p>`;
+    }
+  });
+  if (inList) html += `</${listType}>`;
+
+  if (suggestions.length) {
+    html += '<div class="suggestions">' + suggestions.map(s =>
+      `<button class="sug-chip" onclick="ask(this.textContent)">${s}</button>`
+    ).join('') + '</div>';
+  }
+
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `
+    <div class="avatar">${role==='assistant'?'🌿':'J'}</div>
+    <div class="bubble">${html}</div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  hideWelcome();
+  const msgs = document.getElementById('messages');
+  const el = document.createElement('div');
+  el.className = 'typing'; el.id = 'typing';
+  el.innerHTML = `<div class="avatar" style="background:#3D2B1F;color:#C9A84C">🌿</div>
+    <div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() { document.getElementById('typing')?.remove(); }
+
+function parseSuggestions(text) {
+  const m = text.match(/\[SUGGESTIES:(.*?)\]/s);
+  const suggestions = m ? m[1].split('|').map(s=>s.trim()).filter(Boolean) : [];
+  const clean = text.replace(/\[SUGGESTIES:.*?\]/s,'').trim();
+  return { clean, suggestions };
+}
+
+async function sendMessage() {
+  const input = document.getElementById('input');
+  const text = input.value.trim();
+  if (!text || loading) return;
+  input.value = ''; input.style.height = 'auto';
+  await ask(text);
+}
+
+async function ask(text) {
+  if (loading) return;
+  loading = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  addMsg('user', text);
+  history.push({role:'user', content:text});
+  showTyping();
+
+  try {
+    // Roept je eigen Vercel backend aan — pas de URL aan na deployment
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        messages: history,
+        system: SYSTEM + `\n\n[Actieve stap: Stap ${currentStep+1} — ${STEPS[currentStep].title}]`
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    const raw = data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    const {clean, suggestions} = parseSuggestions(raw);
+    removeTyping();
+    addMsg('assistant', clean, suggestions);
+    history.push({role:'assistant', content:raw});
+  } catch(err) {
+    removeTyping();
+    addMsg('assistant', `Er ging iets mis: ${err.message}`);
+  }
+
+  loading = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function clearChat() {
+  history = [];
+  const msgs = document.getElementById('messages');
+  msgs.innerHTML = `<div class="welcome" id="welcome">
+    <div class="welcome-icon">🌿</div>
+    <h2>Hallo, ik ben jouw<br><em>DNA-genealogie gids</em></h2>
+    <p>Ik help je stap voor stap bij het vinden van je biologische vader. Stel me elke vraag.</p>
+    <div class="chips">
+      <div class="chip" onclick="ask('Waar begin ik? Ik heb nog geen DNA-test gedaan.')">Waar begin ik?</div>
+      <div class="chip" onclick="ask('Ik heb al een DNA-test. Wat zijn mijn volgende stappen?')">Ik heb al een test</div>
+      <div class="chip" onclick="ask('Ik heb veel matches maar weet niet hoe ik ze moet analyseren')">Veel matches, hoe nu?</div>
+      <div class="chip" onclick="ask('Hoe lang duurt dit proces gemiddeld?')">Hoe lang duurt het?</div>
+      <div class="chip" onclick="ask('Vertel me meer over Socht en Ester de Lau')">Hulp van een expert</div>
+    </div>
+  </div>`;
+}
+</script>
+</body>
+</html>

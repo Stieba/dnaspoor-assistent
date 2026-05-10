@@ -1,0 +1,6 @@
+{
+  "name": "dnaspoor-assistent",
+  "version": "1.0.0",
+  "description": "DNASpoor AI Assistent voor donorkinderen",
+  "engines": { "node": "18.x" }
+}
