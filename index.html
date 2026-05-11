@@ -386,7 +386,7 @@ async function ask(text) {
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         messages: history,
-        system: SYSTEM + `\n\n[Actieve stap: Stap ${currentStep+1} — ${STEPS[currentStep].title}]`
+        stepContext: `Stap ${currentStep+1} van 6 — ${STEPS[currentStep].title}`
       })
     });
     const data = await res.json();
